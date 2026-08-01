@@ -29,8 +29,10 @@ SIM = REPO / "sim" / "obj_dir" / "Vjr100_top"
 EMU_DATAS = REPO.parent / "jr100emu" / "datas"
 
 
-def run_sim(args: list[str], dump: Path, ranges: list[str]) -> dict[int, int]:
-    cmd = [str(SIM), "--image", str(WORK / "boot.img"), "--cycles", "600000",
+def run_sim(args: list[str], dump: Path, ranges: list[str],
+            boot_cycles: int = 600000) -> dict[int, int]:
+    cmd = [str(SIM), "--image", str(WORK / "boot.img"),
+           "--cycles", str(boot_cycles),
            "--autostart", "--dump", str(dump)]
     for r in ranges:
         cmd += ["--dump-range", r]
@@ -67,7 +69,7 @@ def test_run() -> bool:
     return False
 
 
-def test_usr() -> bool:
+def make_usr_prg() -> Path:
     routine = WORK / "as_routine.bin"
     routine.write_bytes(bytes([0x86, 0x2A, 0xB7, 0x07, 0x00, 0x39]))
     bas = WORK / "as_stub.bas"
@@ -77,12 +79,31 @@ def test_usr() -> bool:
         [sys.executable, str(REPO / "tools" / "bas2prg.py"), str(bas),
          str(prg), "--bin", f"1000:{routine}", "--autostart", "1000"],
         check=True, capture_output=True)
-    mem = run_sim(["--prg", str(prg), "--cycles2", "3500000"],
+    return prg
+
+
+def test_usr() -> bool:
+    prg = make_usr_prg()
+    mem = run_sim(["--prg", str(prg), "--cycles2", "4500000"],
                   WORK / "as_usr.dump", ["0700:070F"])
     if mem.get(0x0700) == 0x2A:
         print("PASS autostart USR=$1000 (routine executed)")
         return True
     print(f"FAIL autostart USR: mem[0700]={mem.get(0x0700)}")
+    return False
+
+
+def test_usr_before_ready() -> bool:
+    prg = make_usr_prg()
+    mem = run_sim(
+        ["--prg", str(prg), "--cycles2", "4500000"],
+        WORK / "as_usr_before_ready.dump", ["0700:070F", "C100:C3FF"],
+        boot_cycles=0)
+    if mem.get(0x0700) == 0x2A:
+        print("PASS autostart USR waits for BASIC input")
+        return True
+    print("FAIL autostart USR started before BASIC input: screen:\n" +
+          vram_text(mem))
     return False
 
 
@@ -103,6 +124,7 @@ def test_none() -> bool:
 def main() -> int:
     ok = test_run()
     ok &= test_usr()
+    ok &= test_usr_before_ready()
     ok &= test_none()
     return 0 if ok else 1
 

@@ -30,7 +30,10 @@ module jr100_autotype
     output logic        busy
 );
 
-    localparam int T_DELAY = 250000;  // settle after load (~0.28s)
+    // A file load may complete before JR-BASIC has reached its input loop.
+    // Wait long enough for boot and the first keyboard scan; otherwise the
+    // leading characters can be discarded while the READY prompt is drawn.
+    localparam int T_DELAY = 1500000; // settle after load (~1.68s)
     localparam int T_PRESS = 90000;   // key held (~0.1s)
     localparam int T_GAP   = 90000;   // all released between keys
 
@@ -90,7 +93,7 @@ module jr100_autotype
     logic        usr_mode;
     logic [15:0] addr;
     logic [3:0]  step, last_step;
-    logic [17:0] cnt;
+    logic [20:0] cnt;
 
     assign busy = (state != A_IDLE);
 
@@ -121,31 +124,31 @@ module jr100_autotype
                     addr      <= usr_addr;
                     step      <= 4'd0;
                     last_step <= mode_usr ? 4'd12 : 4'd3;
-                    cnt       <= 18'(T_DELAY);
+                    cnt       <= 21'(T_DELAY);
                     state     <= A_DELAY;
                 end
             end
             A_DELAY: if (cen) begin
-                if (cnt != 0) cnt <= cnt - 18'd1;
+                if (cnt != 0) cnt <= cnt - 21'd1;
                 else begin
-                    cnt   <= 18'(T_PRESS);
+                    cnt   <= 21'(T_PRESS);
                     state <= A_PRESS;
                 end
             end
             A_PRESS: if (cen) begin
-                if (cnt != 0) cnt <= cnt - 18'd1;
+                if (cnt != 0) cnt <= cnt - 21'd1;
                 else begin
-                    cnt   <= 18'(T_GAP);
+                    cnt   <= 21'(T_GAP);
                     state <= A_GAP;
                 end
             end
             A_GAP: if (cen) begin
-                if (cnt != 0) cnt <= cnt - 18'd1;
+                if (cnt != 0) cnt <= cnt - 21'd1;
                 else if (step == last_step) begin
                     state <= A_IDLE;
                 end else begin
                     step  <= step + 4'd1;
-                    cnt   <= 18'(T_PRESS);
+                    cnt   <= 21'(T_PRESS);
                     state <= A_PRESS;
                 end
             end
