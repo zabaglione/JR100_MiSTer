@@ -35,6 +35,12 @@ python3 tools/prog2rom.py jr100rom.prg boot.rom
 
 コア起動時に `boot.rom` が自動ロードされます（OSDの「Load BASIC ROM」から手動選択も可能）。ROMイメージは絶対にコミットしないでください（`./scripts/setup-hooks.sh` で混入ガードを有効化できます）。
 
+## SuperStation OneのConsole Mode
+
+SuperStation One FW 1.2とConsole Mode 1.1.1では、MGLを使って`Load Game`からJR-100コア、プログラム転送、オートスタートを連続実行できることを確認しています。
+SS1では実際のゲームルートがUSBストレージ側になる場合があるため、通常のMiSTer手順と分けて[SS1 FW 1.2とConsole Modeの設定手順](docs/SS1_FW12_CONSOLE_MODE.md)にまとめています。
+機械語のみのSTAR FIREと、BASICのみのプログラムをそれぞれ起動するMGL例も掲載しています。
+
 ## プログラムのロード
 
 - `.prg`（PROG v1/v2コンテナ）: OSD →「Load PRG」。バイナリセクションは指定アドレスへ、BASICセクションは `0246` へロードされワークポインタも設定済み（そのまま `LIST`/`RUN` 可能）
