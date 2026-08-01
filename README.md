@@ -35,6 +35,22 @@ python3 tools/prog2rom.py jr100rom.prg boot.rom
 
 The core auto-loads `boot.rom` at start; the OSD "Load BASIC ROM" entry does the same manually. Never commit ROM images to this repository (`./scripts/setup-hooks.sh` installs a pre-commit guard).
 
+## Console Mode on SuperStation One
+
+The following setup was verified on August 1, 2026 with SuperStation firmware 1.2 and Console Mode 1.1.1. After restarting Console Mode, the JR-100 core appeared under **Load Core** and booted JR-BASIC with `boot.rom`.
+
+1. Copy the latest release core into the computer-core directory. For the current release:
+
+   ```text
+   /media/fat/_Computer/JR100_20260725.rbf
+   ```
+
+2. Put the legally obtained 8 KiB BASIC ROM at `/media/fat/games/JR100/boot.rom` as described above. Put `.prg`, `.prog`, `.bas`, and `.cmt` files in the same game directory.
+3. Restart Console Mode, then select **Load Core → JR100_20260725**.
+4. Load programs from the JR-100 core's OSD with **Load PRG**, **Load BAS**, or **Mount Tape**. The normal loading and tape procedures are described below.
+
+Direct launch through **Load Game → Computer** is not supported by the current JR-100 integration. Adding a custom JR-100 entry to Console Mode's `Computer.ini` makes the files visible but does not launch them correctly; use **Load Core** and the core OSD instead.
+
 ## Loading programs
 
 - `.prg` (PROG v1/v2 containers): OSD → "Load PRG". Binary sections load to their addresses; BASIC sections load at `0246` with workspace pointers set, ready for `LIST`/`RUN`.
